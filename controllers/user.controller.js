@@ -144,26 +144,26 @@ function _login(req, res) {
     var email = req.body.email;
     var password = req.body.password;
     if (!email || !email.trim() || !password || !password.trim()) {
-        res.status(400).json({ message: messages.login['400'] });
+        res.status(400).json({ message: messages.post.login['400'] });
         return;
     }
     userModel.findOne({ email: email }, (err, data) => {
         if (err || !data) {
             if (err) logger.error(err);
-            res.status(400).json({ message: messages.login['400'] });
+            res.status(400).json({ message: messages.post.login['400'] });
         } else {
             if (data.deleted) {
-                res.status(401).json({ message: messages.login['401'] });
+                res.status(401).json({ message: messages.post.login['401'] });
                 return;
             }
             jwt.verify(data.password, secret, (err, decoded) => {
                 if (err) {
                     logger.error(err);
-                    res.status(400).json({ message: messages.login['400'] });
+                    res.status(400).json({ message: messages.post.login['400'] });
                     return;
                 }
                 if (decoded != password) {
-                    res.status(400).json({ message: messages.login['400'] });
+                    res.status(400).json({ message: messages.post.login['400'] });
                     return;
                 } else {
                     var temp = {
@@ -181,7 +181,7 @@ function _login(req, res) {
 }
 function _register(req, res) {
     if (!req.body.email || !req.body.email.trim() || !req.body.password || !req.body.password.trim()) {
-        res.status(400).json({ message: messages.register['400'] });
+        res.status(400).json({ message: messages.post.register['400'] });
         return;
     }
     req.body.password = jwt.sign(req.body.password, secret);
@@ -193,14 +193,14 @@ function _register(req, res) {
     userModel.create(req.body, function (err, data) {
         if (err) {
             if (err.code == 11000) {
-                res.status(401).json({ message: messages.register['401'] });
+                res.status(401).json({ message: messages.post.register['401'] });
             } else {
                 logger.error(err);
-                res.status(500).json({ message: messages.register['500'] });
+                res.status(500).json({ message: messages.post.register['500'] });
             }
 
         } else {
-            res.status(200).json({ message: messages.register['200'] });
+            res.status(200).json({ message: messages.post.register['200'] });
         }
     });
 }
@@ -208,15 +208,15 @@ function _register(req, res) {
 function _validate(req, res) {
     jwt.verify(req.headers.authorization, secret, (err, decoded) => {
         if (err || !decoded) {
-            res.status(401).json({ message: messages.validate['401'] });
+            res.status(401).json({ message: messages.get.validate['401'] });
             return;
         }
         userModel.findOne({ email: decoded.email }, (err, data) => {
             if (err || !data) {
-                res.status(401).json({ message: messages.validate['401'] });
+                res.status(401).json({ message: messages.get.validate['401'] });
                 return;
             }
-            res.status(200).json({ message: messages.validate['200'] });
+            res.status(200).json({ message: messages.get.validate['200'] });
         });
     });
 }
