@@ -26,8 +26,21 @@ npm start
 - config.json
 ```javascript
 {
-    "secret": "1234567890", //secret key to encrypt passwords and tokens
-    "permanentDelete": true //if set to false, records will not be deleted from database
+    "secret": "1234567890",
+    "permanentDelete": true,
+    "enableMail":false,
+    "mail":{
+        "from":"\"Account\" <account@yourdomain.com>"
+    },
+    "smtp": {
+        "host": "smtp.ethereal.email",
+        "port": 587,
+        "secure": false,
+        "auth": {
+            "user": "",
+            "pass": ""
+        }
+    }
 }
 ```
 ### Messages
