@@ -1,213 +1,230 @@
-
-const secret = '$58468@16031950$';
+const config = require('../config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const utils = require('../utils/utils');
-const schema = require('../schemas/user.schema');
-const _schema = new mongoose.Schema(schema);
+const userSchema = new mongoose.Schema(require('../schemas/user.schema'));
+const messages = require('../messages/user.messages');
 const log4js = require('log4js');
 const logger = log4js.getLogger('Controller');
-_schema.add({ _id: { type: "String" } });
-_schema.pre('save', utils.getNextId('user'));
+userSchema.add({ _id: { type: "String" } });
+userSchema.pre('save', utils.getNextId('user'));
 
-const _model = mongoose.model('user', _schema);
+const userModel = mongoose.model('user', userSchema);
+
+const secret = config.secret;
 
 log4js.configure({
-    appenders: { 'out': { type: 'stdout' },controller: { type: 'file', filename: 'logs/controller.log',maxLogSize:52428800 } },
-    categories: { default: { appenders: ['out','controller'], level: 'info' } }
+    appenders: { 'out': { type: 'stdout' }, controller: { type: 'file', filename: 'logs/controller.log', maxLogSize: 52428800 } },
+    categories: { default: { appenders: ['out', 'controller'], level: 'info' } }
 });
 
-function _create(_req, _res) {
-    _req.body.password = jwt.sign(_req.body.password, secret);
-    _req.body.createdAt = new Date();
-    _req.body.lastUpdated = new Date();
-    _req.body.deleted = false;
-    _model.create(_req.body, function (_err, _data) {
-        if (_err) {
-            logger.error(_err);
-            _res.status(400).json({ code: _err.code, message: _err.message });
+function _create(req, res) {
+    req.body.password = jwt.sign(req.body.password, secret);
+    req.body.createdAt = new Date();
+    req.body.lastUpdated = new Date();
+    req.body.deleted = false;
+    userModel.create(req.body, function (err, data) {
+        if (err) {
+            logger.error(err);
+            res.status(400).json({ code: err.code, message: err.message });
         } else {
-            _res.status(200).json(_data);
+            res.status(200).json(data);
         }
     });
 }
 
-function _read(_req, _res) {
+function _read(req, res) {
     var query = null;
     var skip = 0;
     var count = 10;
     var filter = {};
-    if (_req.query.count && (+_req.query.count) > 0) {
-        count = +_req.query.count;
+    if (req.query.count && req.query.count > 0) {
+        count = req.query.count;
     }
-    if (_req.query.page && (+_req.query.page) > 0) {
-        skip = count * ((+_req.query.page) - 1);
+    if (req.query.count < 0) {
+        count = -1;
     }
-    if (_req.query.filter) {
+    if (count > 0 && req.query.page && (+req.query.page) > 0) {
+        skip = count * ((+req.query.page) - 1);
+    }
+    if (req.query.filter) {
         try {
-            filter = JSON.parse(_req.query.filter, (_key, _value) => {
-                if (typeof _value == 'string' && _value.match(/^(\/)*[\w]+(\/)*[a-z]{0,1}/)) {
-                    if (_value.charAt(_value.length - 1) != '/') {
-                        return new RegExp(_value.replace(/^\/*([\w]+)\/*[a-z]*$/, '$1'), _value.replace(/^.*\/([a-z]+)$/, '$1'));
+            filter = JSON.parse(req.query.filter, (key, value) => {
+                if (typeof value == 'string' && value.match(/^(\/)*[\w]+(\/)*[a-z]{0,1}/)) {
+                    if (value.charAt(value.length - 1) != '/') {
+                        return new RegExp(value.replace(/^\/*([\w]+)\/*[a-z]*$/, '$1'), value.replace(/^.*\/([a-z]+)$/, '$1'));
                     } else {
-                        return new RegExp(_value.replace(/^\/*([\w]+)\/*[a-z]*$/, '$1'));
+                        return new RegExp(value.replace(/^\/*([\w]+)\/*[a-z]*$/, '$1'));
                     }
                 }
-                return _value;
+                return value;
             });
-        } catch (_e) {
-            logger.error(_e);
+        } catch (e) {
+            logger.error(e);
         }
     }
-    if (_req.params.id) {
-        query = _model.findById(_req.params.id);
+    if (config.permanentDelete == false) {
+        filter.deleted = false;
+    }
+    if (req.params.id) {
+        query = userModel.findById(req.params.id);
     } else {
-        query = _model.find(filter);
-        query.skip(skip);
-        query.limit(count);
-    }
-    if (_req.query.select) {
-        query.select(_req.query.select.split(',').join(' '));
-    }
-    query.exec(_handler);
-    function _handler(_err, _data) {
-        if (_err) {
-            logger.error(_err);
-            _res.status(400).json({ code: _err.code, message: _err.message });
-        } else {
-            _res.status(200).json(_data);
+        query = userModel.find(filter);
+        if (count > 0) {
+            query.skip(skip);
+            query.limit(count);
         }
     }
-}
-
-function _update(_req, _res) {
-    _req.body.lastUpdated = new Data();
-    _model.findOneAndUpdate({ _id: _req.params.id }, _req.body, function (_err, _data) {
-        if (_err) {
-            logger.error(_err);
-            _res.status(400).json({ code: _err.code, message: _err.message });
+    if (req.query.select) {
+        query.select(req.query.select.split(',').join(' '));
+    }
+    query.exec(function (err, data) {
+        if (err) {
+            logger.error(err);
+            res.status(400).json({ code: err.code, message: err.message });
         } else {
-            _res.status(200).json(_data);
+            res.status(200).json(data);
         }
     });
 }
 
-function _delete(_req, _res) {
-    _model.findByIdAndRemove(_req.params.id, function (_err, _data) {
-        if (_err) {
-            logger.error(_err);
-            _res.status(400).json({ code: _err.code, message: _err.message });
+function _update(req, res) {
+    req.body.lastUpdated = new Data();
+    userModel.findOneAndUpdate({ id: req.params.id }, req.body, function (err, data) {
+        if (err) {
+            logger.error(err);
+            res.status(400).json({ code: err.code, message: err.message });
         } else {
-            _res.status(200).json(_data);
+            res.status(200).json(data);
         }
     });
 }
 
-function _count(_req, _res) {
+function _delete(req, res) {
+    if (config.permanentDelete == true) {
+        userModel.findByIdAndRemove(req.params.id, function (err, data) {
+            if (err) {
+                logger.error(err);
+                res.status(400).json({ code: err.code, message: err.message });
+            } else {
+                res.status(200).json(data);
+            }
+        });
+    } else {
+        userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, function (err, data) {
+            if (err) {
+                logger.error(err);
+                res.status(400).json({ code: err.code, message: err.message });
+            } else {
+                res.status(200).json(data);
+            }
+        });
+    }
+}
+
+function _count(req, res) {
     var filter = {};
-    if (_req.query.filter) {
-        filter = _req.query.filter;
+    if (req.query.filter) {
+        filter = req.query.filter;
     }
-    _model.count(filter, function (_err, _count) {
-        if (_err) {
-            logger.error(_err);
-            _res.status(400).json({ code: _err.code, message: _err.message });
+    if (config.permanentDelete == false) {
+        filter.deleted = false;
+    }
+    userModel.count(filter, function (err, count) {
+        if (err) {
+            logger.error(err);
+            res.status(400).json({ code: err.code, message: err.message });
         } else {
-            _res.status(200).end(_count);
+            res.status(200).end(count);
         }
     });
 }
 
-function _login(_req, _res) {
-
-    var email = _req.body.username;
-    var password = _req.body.password;
+function _login(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
     if (!email || !email.trim() || !password || !password.trim()) {
-        _res.status(400).json({ message: 'Invalid Email ID or Password' });
+        res.status(400).json({ message: messages.login['400'] });
         return;
     }
-    _model.findOne({ email: email }, (_err, _data) => {
-        if (_err || !_data) {
-            if(_err) logger.error(_err);
-            _res.status(400).json({ message: 'Invalid Email ID or Password' });
+    userModel.findOne({ email: email }, (err, data) => {
+        if (err || !data) {
+            if (err) logger.error(err);
+            res.status(400).json({ message: messages.login['400'] });
         } else {
-            if(_data.deleted){
-                _res.status(401).json({ message: 'Your account was deleted, please contact support@partymuktbharat.org' });
+            if (data.deleted) {
+                res.status(401).json({ message: messages.login['401'] });
                 return;
             }
-            jwt.verify(_data.password, secret, (err, decoded) => {
+            jwt.verify(data.password, secret, (err, decoded) => {
                 if (err) {
-                    logger.error(_err);
-                    _res.status(400).json({ message: 'Invalid Email ID or Password' });
+                    logger.error(err);
+                    res.status(400).json({ message: messages.login['400'] });
                     return;
                 }
                 if (decoded != password) {
-                    _res.status(400).json({ message: 'Invalid Email ID or Password' });
+                    res.status(400).json({ message: messages.login['400'] });
                     return;
                 } else {
                     var temp = {
-                        firstName: _data.firstName,
-                        lastName: _data.lastName,
-                        contact: _data.contact,
-                        email: _data.email
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        contact: data.contact,
+                        email: data.email
                     };
                     temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
-                    _res.status(200).json(temp);
+                    res.status(200).json(temp);
                 }
             });
         }
     });
 }
-function _register(_req, _res) {
-    if (!_req.body.email || !_req.body.email.trim() || !_req.body.password || !_req.body.password.trim()) {
-        _res.status(400).json({ message: 'Email and password is mandatory' });
+function _register(req, res) {
+    if (!req.body.email || !req.body.email.trim() || !req.body.password || !req.body.password.trim()) {
+        res.status(400).json({ message: messages.register['400'] });
         return;
     }
-    _req.body.password = jwt.sign(_req.body.password, secret);
-    _req.body.createdAt = new Date();
-    _req.body.lastUpdated = new Date();
-    _req.body.status = 0;
-    _req.body.type = 0;
-    _req.body.deleted = false;
-    _model.create(_req.body, function (_err, _data) {
-        if (_err) {
-            if(_err.code == 11000){
-                _res.status(400).json({ message:'User already registered with this email ID'});
-            }else{
-                logger.error(_err);
-                _res.status(400).json({ message: 'Unable to register please try again later' });
+    req.body.password = jwt.sign(req.body.password, secret);
+    req.body.createdAt = new Date();
+    req.body.lastUpdated = new Date();
+    req.body.status = 0;
+    req.body.type = 0;
+    req.body.deleted = false;
+    userModel.create(req.body, function (err, data) {
+        if (err) {
+            if (err.code == 11000) {
+                res.status(401).json({ message: messages.register['401'] });
+            } else {
+                logger.error(err);
+                res.status(500).json({ message: messages.register['500'] });
             }
-            
+
         } else {
-            _res.status(200).json({ message: 'Account created successfully, please login to continue.' });
+            res.status(200).json({ message: messages.register['200'] });
         }
     });
 }
 
-function _validate(_req, _res){
-    if(!_req.headers.authorization){
-        _res.status(400).json({ message: 'Invalid Request' });
-        return;
-    }
-    jwt.verify(_req.headers.authorization, secret, (err, decoded) => {
+function _validate(req, res) {
+    jwt.verify(req.headers.authorization, secret, (err, decoded) => {
         if (err || !decoded) {
-            _res.status(404).json({ message: 'Invalid token' });
+            res.status(401).json({ message: messages.validate['401'] });
             return;
         }
-        _model.findOne({ email: decoded.email }, (_err, _data) => {
-            if(_err || !_data){
-                _res.status(404).json({ message: 'Invalid token' });
+        userModel.findOne({ email: decoded.email }, (err, data) => {
+            if (err || !data) {
+                res.status(401).json({ message: messages.validate['401'] });
                 return;
             }
-            _res.status(200).json({message:'Valid token'});
+            res.status(200).json({ message: messages.validate['200'] });
         });
     });
 }
-function _activate(_req, _res){
-    
+function _activate(req, res) {
+
 }
-function _forgot(_req, _res){
-    
+function _forgot(req, res) {
+
 }
 
 

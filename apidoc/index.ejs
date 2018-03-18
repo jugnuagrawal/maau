@@ -199,14 +199,14 @@
 
 <body>
     <header>
-        <h1><%=name%> API</h1>
+        <h1>MAAU API</h1>
         <small>[ http://<%=host%>:<%=port%> ]</small>
     </header>
     <div class="api" onClick="toggle(event)">
         <div class="block get">
             <div class="header">
                 <span class="method">GET</span>
-                <span class="url"><%=api%>/count</span>
+                <span class="url">/user/count</span>
             </div>
             <div class="body">
                 <table>
@@ -282,7 +282,7 @@
         <div class="block get" >
             <div class="header">
                 <span class="method">GET</span>
-                <span class="url"><%=api%></span>
+                <span class="url">/user</span>
             </div>
             <div class="body">
                 <table>
@@ -397,7 +397,7 @@
         <div class="block get">
             <div class="header">
                 <span class="method">GET</span>
-                <span class="url"><%=api%>/{id}</span>
+                <span class="url">/user/{id}</span>
             </div>
             <div class="body">
                 <table>
@@ -497,7 +497,7 @@
         <div class="block post">
             <div class="header">
                 <span class="method">POST</span>
-                <span class="url"><%=api%></span>
+                <span class="url">/user</span>
             </div>
             <div class="body">
                 <table>
@@ -586,7 +586,7 @@
         <div class="block put">
             <div class="header">
                 <span class="method">PUT</span>
-                <span class="url"><%=api%>/{id}</span>
+                <span class="url">/user/{id}</span>
             </div>
             <div class="body">
                 <table>
@@ -639,7 +639,7 @@
                                 Record updated successfully
                             </td>
                             <td>
-                                <pre>{ id : String }</pre>
+                                <pre>#DataModel</pre>
                             </td>
                         </tr>
                         <tr>
@@ -688,7 +688,7 @@
         <div class="block delete">
             <div class="header">
                 <span class="method">DELETE</span>
-                <span class="url"><%=api%>/{id}</span>
+                <span class="url">/user/{id}</span>
             </div>
             <div class="body">
                 <table>
@@ -728,7 +728,7 @@
                                 Record deleted successfully
                             </td>
                             <td>
-                                <pre>{ id : String }</pre>
+                                <pre>#DataModel</pre>
                             </td>
                         </tr>
                         <tr>
@@ -739,6 +739,82 @@
                             </th>
                             <td>
                                 Unauthorised
+                            </td>
+                            <td>
+                                <pre>{ message : String }</pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="danger">500
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Internal Server Error
+                            </td>
+                            <td>
+                                <pre>{ message : String }</pre>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="block post">
+            <div class="header">
+                <span class="method">POST</span>
+                <span class="url">/login</span>
+            </div>
+            <div class="body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="2">Parameters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>body
+                                <sup>
+                                    <small class="danger">*required</small>
+                                </sup>
+                                <div class="info-text">
+                                    <small>JSON data in body</small>
+                                </div>
+                            </th>
+                            <td>
+                                <pre>{ email : String, password : String }</pre>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <thead>
+                        <tr>
+                            <th colspan="2">Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th class="success">200
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Logged in successfully
+                            </td>
+                            <td>
+                                <pre>{ token : String }</pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="warning">401
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Bad Parameters
                             </td>
                             <td>
                                 <pre>{ message : String }</pre>

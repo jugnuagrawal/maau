@@ -26,14 +26,14 @@ var counterSchema = new mongoose.Schema({
     }
 });
 var counterModel = mongoose.model("counter", counterSchema);
-function _creatCounter(collectionName) {
+function creatCounter(collectionName) {
     counterModel.create({
         _id: collectionName,
         next: 1
     }).then(() => {}, () => {});
 };
 
-function _getNext(collectionName, callback) {
+function getNext(collectionName, callback) {
     var options = {};
     options.new = true;
     options.upsert = true;
@@ -46,12 +46,12 @@ function _getNext(collectionName, callback) {
 };
 
 
-function _getNextId(collectionName) {
-    _creatCounter(collectionName)
+function getNextId(collectionName) {
+    creatCounter(collectionName)
     return function (next) {
         var self = this;
         if (!self._id) {
-            _getNext(collectionName,function(_err,_doc){
+            getNext(collectionName,function(_err,_doc){
                 self._id = collectionName.createId(_doc.next,10);
                 next();
             });
@@ -61,4 +61,4 @@ function _getNextId(collectionName) {
     };
 }
 
-module.exports.getNextId = _getNextId;
+module.exports.getNextId = getNextId;
