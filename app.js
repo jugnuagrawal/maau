@@ -48,7 +48,7 @@ app.use(function (_req, _res, _next) {
 
 // Uncomment and right your own business logic to do Authentication check
 app.use(function (_req, _res, _next) {
-    if (_req.path!='/apidoc' && _req.path != '/login' && _req.path != '/register') {
+    if (_req.path!='/apidoc' && _req.path!='/activate' && _req.path != '/login' && _req.path != '/register') {
         if (_req.headers.authorization) {
             jwt.verify(_req.headers.authorization, secret, (err, decoded) => {
                 if (err || !decoded) {

@@ -1,8 +1,17 @@
 {
     "secret": "1234567890",
     "permanentDelete": true,
-    "mail": {
-        "smtp": {},
-        "imap": {}
+    "enableMail":false,
+    "mail":{
+        "from":"\"Account\" <account@yourdomain.com>"
+    },
+    "smtp": {
+        "host": "smtp.ethereal.email",
+        "port": 587,
+        "secure": false,
+        "auth": {
+            "user": "",
+            "pass": ""
+        }
     }
 }

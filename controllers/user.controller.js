@@ -1,10 +1,11 @@
-const config = require('../config');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const nodemailer = require('nodemailer');
+const log4js = require('log4js');
+const config = require('../config');
 const utils = require('../utils/utils');
 const userSchema = new mongoose.Schema(require('../schemas/user.schema'));
 const messages = require('../messages/user.messages');
-const log4js = require('log4js');
 const logger = log4js.getLogger('Controller');
 userSchema.add({ _id: { type: "String" } });
 userSchema.pre('save', utils.getNextId('user'));
@@ -18,6 +19,25 @@ log4js.configure({
     categories: { default: { appenders: ['out', 'controller'], level: 'info' } }
 });
 
+function _sendMail(to, subject, content) {
+    let transporter = nodemailer.createTransport(config.smtp);
+
+    let mailOptions = {
+        from: config.mail.from, // sender address
+        to: to, // list of receivers
+        subject: subject, // Subject line
+        html: content // html body
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+        if (err) {
+            logger.error(err);
+            return;
+        }
+        logger.info('Email sent: ', info.messageId);
+    });
+}
+
 function _create(req, res) {
     req.body.password = jwt.sign(req.body.password, secret);
     req.body.createdAt = new Date();
@@ -28,6 +48,9 @@ function _create(req, res) {
             logger.error(err);
             res.status(400).json({ code: err.code, message: err.message });
         } else {
+            if (config.enableMail) {
+                _sendMail(req.body.email, 'Activate your account', '');
+            }
             res.status(200).json(data);
         }
     });
@@ -200,6 +223,9 @@ function _register(req, res) {
             }
 
         } else {
+            if (config.enableMail) {
+                _sendMail(req.body.email, 'Activate your Account', '');
+            }
             res.status(200).json({ message: messages.post.register['200'] });
         }
     });
@@ -221,10 +247,32 @@ function _validate(req, res) {
     });
 }
 function _activate(req, res) {
-
+    jwt.verify(req.params.token, secret, (err, decoded) => {
+        if (err || !decoded) {
+            res.status(401).json({ message: messages.get.validate['401'] });
+            return;
+        }
+        userModel.findOneAndUpdate({ email: decoded.email }, { status: 1 }, (err, data) => {
+            if (err || !data) {
+                res.status(401).json({ message: messages.get.validate['401'] });
+                return;
+            }
+            res.status(200).json({ message: messages.get.validate['200'] });
+        });
+    });
 }
 function _forgot(req, res) {
-
+    userModel.findOne({ email: req.params.id }, function (err, data) {
+        if (err) {
+            logger.error(err);
+            res.status(400).json({ code: err.code, message: err.message });
+        } else {
+            var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
+            if (config.enableMail) {
+                _sendMail(data.email, 'Reset your password', '');
+            }
+        }
+    });
 }
 
 

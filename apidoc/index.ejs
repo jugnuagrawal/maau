@@ -250,7 +250,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -365,7 +365,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -454,7 +454,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -541,7 +541,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">401
+                            <th class="warning">400
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -554,7 +554,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -643,7 +643,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">401
+                            <th class="warning">400
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -656,7 +656,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -732,7 +732,7 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">403
+                            <th class="warning">401
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
@@ -808,7 +808,83 @@
                             </td>
                         </tr>
                         <tr>
-                            <th class="warning">401
+                            <th class="warning">400
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Bad Parameters
+                            </td>
+                            <td>
+                                <pre>{ message : String }</pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="danger">500
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Internal Server Error
+                            </td>
+                            <td>
+                                <pre>{ message : String }</pre>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="block post">
+            <div class="header">
+                <span class="method">POST</span>
+                <span class="url">/register</span>
+            </div>
+            <div class="body">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="2">Parameters</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th>body
+                                <sup>
+                                    <small class="danger">*required</small>
+                                </sup>
+                                <div class="info-text">
+                                    <small>JSON data in body</small>
+                                </div>
+                            </th>
+                            <td>
+                                <pre>{ email : String, password : String }</pre>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <thead>
+                        <tr>
+                            <th colspan="2">Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th class="success">200
+                                <div class="info-text">
+                                    <small>status code</small>
+                                </div>
+                            </th>
+                            <td>
+                                Logged in successfully
+                            </td>
+                            <td>
+                                <pre>{ token : String }</pre>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th class="warning">400
                                 <div class="info-text">
                                     <small>status code</small>
                                 </div>
