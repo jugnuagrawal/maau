@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "description": "A microservice developed with express js and moongoose js to manage, authentication and authorization users over REST API",
   "main": "app.js",
-  "scripts": {},
+  "scripts": {
+    "start": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jugnuagrawal/maau.git"
+  },
   "keywords": [
     "create account",
     "register",
@@ -30,6 +36,13 @@
     "log4js": "^2.5.2",
     "mongoose": "^5.0.3"
   },
-  "author": "Jugnu Agrawal",
-  "license": "MIT"
+  "author": {
+    "name": "Jugnu Agrawal",
+    "email": "jugnuagrawal.brjn@gmail.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jugnuagrawal/maau/issues"
+  },
+  "homepage": "https://github.com/jugnuagrawal/maau#readme"
 }
