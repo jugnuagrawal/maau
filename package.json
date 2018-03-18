@@ -1,0 +1,35 @@
+{
+  "name": "maau",
+  "version": "1.0.0",
+  "description": "A microservice developed with express js and moongoose js to manage, authentication and authorization users over REST API",
+  "main": "app.js",
+  "scripts": {},
+  "keywords": [
+    "create account",
+    "register",
+    "login",
+    "signup",
+    "signin",
+    "authentication",
+    "authorization",
+    "users",
+    "manage users",
+    "manage authorization",
+    "manage authentication",
+    "microservice",
+    "express",
+    "mongoose",
+    "rest",
+    "crud"
+  ],
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "ejs": "^2.5.7",
+    "express": "^4.16.2",
+    "jsonwebtoken": "^8.2.0",
+    "log4js": "^2.5.2",
+    "mongoose": "^5.0.3"
+  },
+  "author": "Jugnu Agrawal",
+  "license": "MIT"
+}
