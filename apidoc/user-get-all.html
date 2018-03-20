@@ -1,0 +1,130 @@
+<div class="block get">
+        <div class="header">
+            <span class="method">GET</span>
+            <span class="url">/user</span>
+        </div>
+        <div class="body collapse">
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">Parameters</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th>authorization
+                            <sup>
+                                <small class="danger">*required</small>
+                            </sup>
+                            <div class="info-text">
+                                <small>string in header</small>
+                            </div>
+                        </th>
+                        <td>
+                            Authorization token
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>select
+                            <sup>
+                                <small class="info">optional</small>
+                            </sup>
+                            <div class="info-text">
+                                <small>string in query</small>
+                            </div>
+                        </th>
+                        <td>
+                            Returns the records with the selected fields
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>filter
+                            <sup>
+                                <small class="info">optional</small>
+                            </sup>
+                            <div class="info-text">
+                                <small>string in query</small>
+                            </div>
+                        </th>
+                        <td>
+                            Returns the records based on the filter
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>count
+                            <sup>
+                                <small class="info">optional</small>
+                            </sup>
+                            <div class="info-text">
+                                <small>number in query</small>
+                            </div>
+                        </th>
+                        <td>
+                            Returns the number of records
+                            <em>(Default: 10)</em>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>page
+                            <sup>
+                                <small class="info">optional</small>
+                            </sup>
+                            <div class="info-text">
+                                <small>number in query</small>
+                            </div>
+                        </th>
+                        <td>
+                            Returns the set of records
+                            <em>(one page has 'count' no of records)</em>
+                        </td>
+                    </tr>
+                </tbody>
+                <thead>
+                    <tr>
+                        <th colspan="2">Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class="success">200
+                            <div class="info-text">
+                                <small>status code</small>
+                            </div>
+                        </th>
+                        <td>
+                            Records found
+                        </td>
+                        <td>
+                            <pre>[#DataModel]</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="warning">401
+                            <div class="info-text">
+                                <small>status code</small>
+                            </div>
+                        </th>
+                        <td>
+                            Unauthorised
+                        </td>
+                        <td>
+                            <pre>{ message : String }</pre>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th class="danger">500
+                            <div class="info-text">
+                                <small>status code</small>
+                            </div>
+                        </th>
+                        <td>
+                            Internal Server Error
+                        </td>
+                        <td>
+                            <pre>{ message : String }</pre>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
