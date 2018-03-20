@@ -46,7 +46,7 @@ function _create(req, res) {
     userModel.create(req.body, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(400).json({ code: err.code, message: err.message });
+            res.status(500).json({ code: err.code, message: err.message });
         } else {
             if (config.enableMail) {
                 _sendMail(req.body.email, 'Activate your account', '');
@@ -104,7 +104,7 @@ function _read(req, res) {
     query.exec(function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(400).json({ code: err.code, message: err.message });
+            res.status(500).json({ code: err.code, message: err.message });
         } else {
             res.status(200).json(data);
         }
@@ -116,7 +116,7 @@ function _update(req, res) {
     userModel.findOneAndUpdate({ id: req.params.id }, req.body, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(400).json({ code: err.code, message: err.message });
+            res.status(500).json({ code: err.code, message: err.message });
         } else {
             res.status(200).json(data);
         }
@@ -128,7 +128,7 @@ function _delete(req, res) {
         userModel.findByIdAndRemove(req.params.id, function (err, data) {
             if (err) {
                 logger.error(err);
-                res.status(400).json({ code: err.code, message: err.message });
+                res.status(500).json({ code: err.code, message: err.message });
             } else {
                 res.status(200).json(data);
             }
@@ -156,7 +156,7 @@ function _count(req, res) {
     userModel.count(filter, function (err, count) {
         if (err) {
             logger.error(err);
-            res.status(400).json({ code: err.code, message: err.message });
+            res.status(500).json({ message: messages.get.count['500'] });
         } else {
             res.status(200).end(count);
         }
@@ -171,35 +171,39 @@ function _login(req, res) {
         return;
     }
     userModel.findOne({ email: email }, (err, data) => {
-        if (err || !data) {
-            if (err) logger.error(err);
+        if (err) {
+            logger.error(err);
+            res.status(500).json({ message: messages.post.login['500'] });
+            return;
+        }
+        if (!data) {
             res.status(400).json({ message: messages.post.login['400'] });
-        } else {
-            if (data.deleted) {
-                res.status(401).json({ message: messages.post.login['401'] });
+            return;
+        }
+        if (data.deleted) {
+            res.status(401).json({ message: messages.post.login['401'] });
+            return;
+        }
+        jwt.verify(data.password, secret, (err, decoded) => {
+            if (err) {
+                logger.error(err);
+                res.status(400).json({ message: messages.post.login['400'] });
                 return;
             }
-            jwt.verify(data.password, secret, (err, decoded) => {
-                if (err) {
-                    logger.error(err);
-                    res.status(400).json({ message: messages.post.login['400'] });
-                    return;
-                }
-                if (decoded != password) {
-                    res.status(400).json({ message: messages.post.login['400'] });
-                    return;
-                } else {
-                    var temp = {
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        contact: data.contact,
-                        email: data.email
-                    };
-                    temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
-                    res.status(200).json(temp);
-                }
-            });
-        }
+            if (decoded != password) {
+                res.status(400).json({ message: messages.post.login['400'] });
+                return;
+            } else {
+                var temp = {
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    contact: data.contact,
+                    email: data.email
+                };
+                temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
+                res.status(200).json(temp);
+            }
+        });
     });
 }
 function _register(req, res) {
@@ -238,7 +242,12 @@ function _validate(req, res) {
             return;
         }
         userModel.findOne({ email: decoded.email }, (err, data) => {
-            if (err || !data) {
+            if (err) {
+                logger.error(err);
+                res.status(500).json({ message: messages.get.validate['500'] });
+                return;
+            }
+            if (!data) {
                 res.status(401).json({ message: messages.get.validate['401'] });
                 return;
             }
@@ -249,29 +258,43 @@ function _validate(req, res) {
 function _activate(req, res) {
     jwt.verify(req.params.token, secret, (err, decoded) => {
         if (err || !decoded) {
-            res.status(401).json({ message: messages.get.validate['401'] });
+            res.status(401).json({ message: messages.get.activate['401'] });
             return;
         }
         userModel.findOneAndUpdate({ email: decoded.email }, { status: 1 }, (err, data) => {
-            if (err || !data) {
-                res.status(401).json({ message: messages.get.validate['401'] });
+            if (err) {
+                logger.error(err);
+                res.status(500).json({ message: messages.get.activate['500'] });
                 return;
             }
-            res.status(200).json({ message: messages.get.validate['200'] });
+            if (!data) {
+                res.status(401).json({ message: messages.get.activate['401'] });
+                return;
+            }
+            res.status(200).json({ message: messages.get.activate['200'] });
         });
     });
 }
 function _forgot(req, res) {
-    userModel.findOne({ email: req.params.id }, function (err, data) {
+    if (!req.body || !req.body.email) {
+        res.status(400).json({ message: messages.post.forgot['400'] });
+        return;
+    }
+    userModel.findOne({ email: req.body.email }, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(400).json({ code: err.code, message: err.message });
-        } else {
-            var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
-            if (config.enableMail) {
-                _sendMail(data.email, 'Reset your password', '');
-            }
+            res.status(500).json({ message: messages.post.forgot['500'] });
+            return
         }
+        if (!data) {
+            res.status(400).json({ message: messages.post.forgot['400'] });
+            return
+        }
+        var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
+        if (config.enableMail) {
+            _sendMail(data.email, 'Reset your password', '');
+        }
+        res.status(200).json({ message: messages.post.forgot['200'] });
     });
 }
 

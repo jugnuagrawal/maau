@@ -10,8 +10,8 @@
         "port": 587,
         "secure": false,
         "auth": {
-            "user": "",
-            "pass": ""
+            "user": "ethereal username",
+            "pass": "ethereal password"
         }
     }
 }
