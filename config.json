@@ -1,4 +1,6 @@
 {
+    "database":"maau",
+    "port":"3000",
     "secret": "1234567890",
     "permanentDelete": true,
     "enableMail":false,

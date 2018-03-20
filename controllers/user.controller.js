@@ -46,7 +46,7 @@ function _create(req, res) {
     userModel.create(req.body, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(500).json({ code: err.code, message: err.message });
+            res.status(500).json({ message: messages.post.user['500']  });
         } else {
             if (config.enableMail) {
                 _sendMail(req.body.email, 'Activate your account', '');
@@ -104,7 +104,7 @@ function _read(req, res) {
     query.exec(function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(500).json({ code: err.code, message: err.message });
+            res.status(500).json({ message: messages.get.user['500']  });
         } else {
             res.status(200).json(data);
         }
@@ -116,7 +116,7 @@ function _update(req, res) {
     userModel.findOneAndUpdate({ id: req.params.id }, req.body, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(500).json({ code: err.code, message: err.message });
+            res.status(500).json({ message: messages.put.user['500'] });
         } else {
             res.status(200).json(data);
         }
@@ -128,7 +128,7 @@ function _delete(req, res) {
         userModel.findByIdAndRemove(req.params.id, function (err, data) {
             if (err) {
                 logger.error(err);
-                res.status(500).json({ code: err.code, message: err.message });
+                res.status(500).json({ message: messages.delete.user['500'] });
             } else {
                 res.status(200).json(data);
             }
@@ -137,7 +137,7 @@ function _delete(req, res) {
         userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, function (err, data) {
             if (err) {
                 logger.error(err);
-                res.status(400).json({ code: err.code, message: err.message });
+                res.status(400).json({ message: messages.delete.user['500']  });
             } else {
                 res.status(200).json(data);
             }

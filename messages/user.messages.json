@@ -1,7 +1,10 @@
 {
     "get": {
+        "user":{
+            "500": "Unable to get user"
+        },
         "count":{
-            "500": "Somthing went wrong"
+            "500": "Unable to fetch count"
         },
         "validate": {
             "200": "Valid token",
@@ -15,6 +18,9 @@
         }
     },
     "post": {
+        "user":{
+            "500": "Unable to create user"
+        },
         "login": {
             "400": "Invalid Email ID or Password",
             "401": "Your account was deleted, please contact support",
@@ -27,11 +33,19 @@
             "500": "Unable to register, please try again later"
         },
         "forgot": {
-            "200": "Password reset mail has been sent to your registered email.",
+            "200": "Password reset mail has been sent to your registered email",
             "400": "Invalid Request",
             "500": "Unable to process your request, please try again later"
         }
     },
-    "put": {},
-    "delete": {}
+    "put": {
+        "user":{
+            "500": "Unable to update user"
+        }
+    },
+    "delete": {
+        "user":{
+            "500": "Unable to delete user"
+        }
+    }
 }

@@ -26,6 +26,8 @@ npm start
 - config.json
 ```javascript
 {
+    "database":"maau",
+    "port":"3000",
     "secret": "1234567890",
     "permanentDelete": true,
     "enableMail":false,
@@ -37,40 +39,9 @@ npm start
         "port": 587,
         "secure": false,
         "auth": {
-            "user": "",
-            "pass": ""
+            "user": "ethereal username",
+            "pass": "ethereal password"
         }
-    }
-}
-```
-### Messages
-
-- user.messages.json
-```javascript
-{
-    "get":{
-        "validate":{
-            "200":"Valid token",
-            "401":"Invalid token"
-        }
-    },
-    "post":{
-        "login":{
-            "400":"Invalid Email ID or Password",
-            "401":"Your account was deleted, please contact support"
-        },
-        "register":{
-            "200":"Account created successfully, please login to continue",
-            "400":"Email and password is mandatory",
-            "401":"User already registered with this email ID",
-            "500":"Unable to register please try again later"
-        }
-    },
-    "put":{
-
-    },
-    "delete":{
-        
     }
 }
 ```

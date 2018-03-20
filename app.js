@@ -10,8 +10,8 @@ const routes = require('./routes/index');
 const logger = log4js.getLogger('Server');
 const app = express();
 const host = process.env.HOST || 'localhost';
-const port = process.env.PORT || 3000;
-const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/maau';
+const port = process.env.PORT || config.port || 3000;
+const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/'+(config.database || 'maau');
 const secret = config.secret;
 const _model = mongoose.model('user');
 //log4js configuration
@@ -48,7 +48,7 @@ app.use(function (_req, _res, _next) {
 
 // Uncomment and right your own business logic to do Authentication check
 app.use(function (_req, _res, _next) {
-    if (_req.path!='/apidoc' && _req.path!='/activate' && _req.path != '/login' && _req.path != '/register') {
+    if (_req.path!='/apidoc' && _req.path!='/activate' && _req.path != '/login' && _req.path != '/register' && _req.path != '/forgot') {
         if (_req.headers.authorization) {
             jwt.verify(_req.headers.authorization, secret, (err, decoded) => {
                 if (err || !decoded) {
