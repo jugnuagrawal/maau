@@ -1,0 +1,9 @@
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "admin",
+    "password": "admin",
+    "contact": "",
+    "status": 2,
+    "type": 0
+}

@@ -11,9 +11,10 @@ const logger = log4js.getLogger('Server');
 const app = express();
 const host = process.env.HOST || 'localhost';
 const port = process.env.PORT || config.port || 3000;
-const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/'+(config.database || 'maau');
+const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/' + (config.database || 'maau');
 const secret = config.secret;
 const _model = mongoose.model('user');
+
 //log4js configuration
 log4js.configure({
     appenders: { 'out': { type: 'stdout' }, server: { type: 'file', filename: 'logs/server.log', maxLogSize: 52428800 } },
@@ -48,7 +49,7 @@ app.use(function (_req, _res, _next) {
 
 // Uncomment and right your own business logic to do Authentication check
 app.use(function (_req, _res, _next) {
-    if (_req.path!='/apidoc' && _req.path!='/activate' && _req.path != '/login' && _req.path != '/register' && _req.path != '/forgot') {
+    if (_req.path != '/apidoc' && _req.path != '/activate' && _req.path != '/login' && _req.path != '/register' && _req.path != '/forgot') {
         if (_req.headers.authorization) {
             jwt.verify(_req.headers.authorization, secret, (err, decoded) => {
                 if (err || !decoded) {
@@ -78,11 +79,11 @@ for (var route of routes) {
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'apidoc'));
-app.get('/apidoc',(req,res)=>{
-    res.render('index',{
-        host:host,
-        port:port,
-        schema:require('./schemas/user.schema')
+app.get('/apidoc', (req, res) => {
+    res.render('index', {
+        host: host,
+        port: port,
+        schema: require('./schemas/user.schema')
     });
 });
 
@@ -96,4 +97,14 @@ app.use('*', function (_req, _res) {
 app.listen(port, host, function () {
     logger.info('Server is listening at ', 'http://' + host + ':' + port + '/');
     logger.info('API documentation at ', 'http://' + host + ':' + port + '/apidoc');
+    let defaultUser = require('./users.json');
+    defaultUser.password = jwt.sign(defaultUser.password, secret);
+    defaultUser.createdAt = new Date();
+    defaultUser.lastUpdated = new Date();
+    defaultUser.deleted = false;
+    _model.create(defaultUser).then(data => {
+        logger.info(data);
+    }).catch(err => {
+        logger.error(err);
+    });
 });
