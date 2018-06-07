@@ -21,14 +21,12 @@ log4js.configure({
 
 function sendMail(to, subject, content) {
     let transporter = nodemailer.createTransport(config.smtp);
-
     let mailOptions = {
         from: config.mail.from, // sender address
         to: to, // list of receivers
         subject: subject, // Subject line
         html: content // html body
     };
-
     transporter.sendMail(mailOptions, (error, info) => {
         if (err) {
             logger.error(err);
@@ -49,7 +47,8 @@ function _create(req, res) {
             res.status(500).json({ message: messages.post.user['500'] });
         } else {
             if (config.enableMail) {
-                sendMail(req.body.email, 'Activate your account', '');
+                var token = jwt.sign({email: data.email}, secret, { expiresIn: '24h' });
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/'+token+'">Activate Account</a><br><br><p>Thankyou</p>');
             }
             res.status(200).json(data);
         }
@@ -222,10 +221,10 @@ function _register(req, res) {
                 logger.error(err);
                 res.status(500).json({ message: messages.post.register['500'] });
             }
-
         } else {
             if (config.enableMail) {
-                sendMail(req.body.email, 'Activate your Account', '');
+                var token = jwt.sign({email: data.email}, secret, { expiresIn: '24h' });
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/'+token+'">Activate Account</a><br><br><p>Thankyou</p>');
             }
             res.status(200).json({ message: messages.post.register['200'] });
         }
@@ -287,8 +286,7 @@ function _forgot(req, res) {
             res.status(400).json({ message: messages.post.forgot['400'] });
             return
         }
-        var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
-        if (config.enableMail) {
+        if (config.enableMail) {   
             sendMail(data.email, 'Reset your password', '');
         }
         res.status(200).json({ message: messages.post.forgot['200'] });
@@ -299,7 +297,7 @@ function _reset(req, res) {
         res.status(400).json({ message: messages.post.forgot['400'] });
         return;
     }
-    userModel.findOne({ email: req.body.email }, function (err, data) {
+    userModel.findOneAndUpdate({ email: req.body.email }, function (err, data) {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.post.forgot['500'] });
@@ -308,10 +306,6 @@ function _reset(req, res) {
         if (!data) {
             res.status(400).json({ message: messages.post.forgot['400'] });
             return
-        }
-        var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
-        if (config.enableMail) {
-            sendMail(data.email, 'Reset your password', '');
         }
         res.status(200).json({ message: messages.post.forgot['200'] });
     });
