@@ -19,7 +19,7 @@ log4js.configure({
     categories: { default: { appenders: ['out', 'controller'], level: 'info' } }
 });
 
-function _sendMail(to, subject, content) {
+function sendMail(to, subject, content) {
     let transporter = nodemailer.createTransport(config.smtp);
 
     let mailOptions = {
@@ -49,7 +49,7 @@ function _create(req, res) {
             res.status(500).json({ message: messages.post.user['500'] });
         } else {
             if (config.enableMail) {
-                _sendMail(req.body.email, 'Activate your account', '');
+                sendMail(req.body.email, 'Activate your account', '');
             }
             res.status(200).json(data);
         }
@@ -225,7 +225,7 @@ function _register(req, res) {
 
         } else {
             if (config.enableMail) {
-                _sendMail(req.body.email, 'Activate your Account', '');
+                sendMail(req.body.email, 'Activate your Account', '');
             }
             res.status(200).json({ message: messages.post.register['200'] });
         }
@@ -289,7 +289,7 @@ function _forgot(req, res) {
         }
         var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
         if (config.enableMail) {
-            _sendMail(data.email, 'Reset your password', '');
+            sendMail(data.email, 'Reset your password', '');
         }
         res.status(200).json({ message: messages.post.forgot['200'] });
     });
@@ -311,7 +311,7 @@ function _reset(req, res) {
         }
         var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
         if (config.enableMail) {
-            _sendMail(data.email, 'Reset your password', '');
+            sendMail(data.email, 'Reset your password', '');
         }
         res.status(200).json({ message: messages.post.forgot['200'] });
     });
