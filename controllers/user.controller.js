@@ -259,7 +259,10 @@ function _validate(req, res) {
 function _activate(req, res) {
     tokenModel.findById(req.params.token, (tokenErr, tokenData) => {
         if (tokenErr || !tokenData) {
-            res.status(401).json({ message: messages.get.activate['401'] });
+            res.render('activate', {
+                status:401,
+                message: messages.get.activate['401']
+            });
             return;
         }
         userModel.findByIdAndUpdate(tokenData.userId, { status: 1 }, (err, data) => {
