@@ -9,9 +9,9 @@
     router.put('/user/:id',controller.update);
     router.delete('/user/:id',controller.delete);
     router.get('/validate',controller.validate);
+    router.get('/activate/:token',controller.activate);
     router.post('/login',controller.login);
     router.post('/register',controller.register);
-    router.get('/activate/:token',controller.activate);
-    router.post('/forgot/:id',controller.forgot);
+    router.post('/forgot',controller.forgot);
     module.exports = router;
     

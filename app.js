@@ -58,7 +58,7 @@ app.use(function (req, res, next) {
 
 // Uncomment and right your own business logic to do Authentication check
 app.use(function (req, res, next) {
-    if (req.path != '/apidoc' && req.path != '/activate' && req.path != '/login' && req.path != '/register' && req.path != '/forgot') {
+    if (req.path.indexOf('/activate')==-1 && req.path != '/apidoc' && req.path != '/login' && req.path != '/register' && req.path != '/forgot') {
         if (req.headers.authorization) {
             jwt.verify(req.headers.authorization, secret, (err, decoded) => {
                 if (err || !decoded) {

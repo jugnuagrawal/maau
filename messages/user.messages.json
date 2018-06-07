@@ -33,7 +33,7 @@
             "500": "Unable to register, please try again later"
         },
         "forgot": {
-            "200": "Password reset mail has been sent to your registered email",
+            "200": "We have sent you a code in your email, to reset your password",
             "400": "Invalid Request",
             "500": "Unable to process your request, please try again later"
         }

@@ -1,3 +1,4 @@
+const magicToken = require('magic-token');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
@@ -5,12 +6,14 @@ const log4js = require('log4js');
 const config = require('../config');
 const utils = require('../utils/utils');
 const userSchema = new mongoose.Schema(require('../schemas/user.schema'));
+const tokenSchema = new mongoose.Schema({ _id: String, userId: String, data: String });
 const messages = require('../messages/user.messages');
 const logger = log4js.getLogger('Controller');
 userSchema.add({ _id: { type: "String" } });
 userSchema.pre('save', utils.getNextId('user'));
 
 const userModel = mongoose.model('user', userSchema);
+const tokenModel = mongoose.model('token', tokenSchema);
 
 const secret = config.secret;
 
@@ -41,14 +44,15 @@ function _create(req, res) {
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
     req.body.deleted = false;
-    userModel.create(req.body, function (err, data) {
+    userModel.create(req.body, (err, data) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.post.user['500'] });
         } else {
             if (config.enableMail) {
-                var token = jwt.sign({email: data.email}, secret, { expiresIn: '24h' });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/'+token+'">Activate Account</a><br><br><p>Thankyou</p>');
+                var token = magicToken.token();
+                tokenModel.create({ _id: token, userId: data._id });
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><br><p>Thankyou</p>');
             }
             res.status(200).json(data);
         }
@@ -100,7 +104,7 @@ function _read(req, res) {
     if (req.query.select) {
         query.select(req.query.select.split(',').join(' '));
     }
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.get.user['500'] });
@@ -112,10 +116,10 @@ function _read(req, res) {
 
 function _update(req, res) {
     req.body.lastUpdated = new Data();
-    if(req.body.password){
+    if (req.body.password) {
         req.body.password = utils.encrypt(secret, req.body.password);
     }
-    userModel.findOneAndUpdate({ id: req.params.id }, req.body, function (err, data) {
+    userModel.findOneAndUpdate({ id: req.params.id }, req.body, (err, data) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.put.user['500'] });
@@ -127,7 +131,7 @@ function _update(req, res) {
 
 function _delete(req, res) {
     if (config.permanentDelete == true) {
-        userModel.findByIdAndRemove(req.params.id, function (err, data) {
+        userModel.findByIdAndRemove(req.params.id, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(500).json({ message: messages.delete.user['500'] });
@@ -136,7 +140,7 @@ function _delete(req, res) {
             }
         });
     } else {
-        userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, function (err, data) {
+        userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(400).json({ message: messages.delete.user['500'] });
@@ -155,7 +159,7 @@ function _count(req, res) {
     if (config.permanentDelete == false) {
         filter.deleted = false;
     }
-    userModel.count(filter, function (err, count) {
+    userModel.count(filter, (err, count) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.get.count['500'] });
@@ -213,7 +217,7 @@ function _register(req, res) {
     req.body.status = 0;
     req.body.type = 0;
     req.body.deleted = false;
-    userModel.create(req.body, function (err, data) {
+    userModel.create(req.body, (err, data) => {
         if (err) {
             if (err.code == 11000) {
                 res.status(401).json({ message: messages.post.register['401'] });
@@ -223,8 +227,9 @@ function _register(req, res) {
             }
         } else {
             if (config.enableMail) {
-                var token = jwt.sign({email: data.email}, secret, { expiresIn: '24h' });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/'+token+'">Activate Account</a><br><br><p>Thankyou</p>');
+                var token = magicToken.token();
+                tokenModel.create({ _id: token, userId: data._id });
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><br><p>Thankyou</p>');
             }
             res.status(200).json({ message: messages.post.register['200'] });
         }
@@ -252,12 +257,12 @@ function _validate(req, res) {
     });
 }
 function _activate(req, res) {
-    jwt.verify(req.params.token, secret, (err, decoded) => {
-        if (err || !decoded) {
+    tokenModel.findById(req.params.token, (tokenErr, tokenData) => {
+        if (tokenErr || !tokenData) {
             res.status(401).json({ message: messages.get.activate['401'] });
             return;
         }
-        userModel.findOneAndUpdate({ email: decoded.email }, { status: 1 }, (err, data) => {
+        userModel.findByIdAndUpdate(tokenData.userId, { status: 1 }, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(500).json({ message: messages.get.activate['500'] });
@@ -269,6 +274,7 @@ function _activate(req, res) {
             }
             res.status(200).json({ message: messages.get.activate['200'] });
         });
+        tokenModel.deleteOne({ _id: req.params.token }).exec();
     });
 }
 function _forgot(req, res) {
@@ -276,7 +282,7 @@ function _forgot(req, res) {
         res.status(400).json({ message: messages.post.forgot['400'] });
         return;
     }
-    userModel.findOne({ email: req.body.email }, function (err, data) {
+    userModel.findOne({ email: req.body.email }, (err, data) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.post.forgot['500'] });
@@ -286,28 +292,40 @@ function _forgot(req, res) {
             res.status(400).json({ message: messages.post.forgot['400'] });
             return
         }
-        if (config.enableMail) {   
-            sendMail(data.email, 'Reset your password', '');
+        if (config.enableMail) {
+            var token = magicToken.token();
+            var code = utils.generateCode();
+            tokenModel.create({ _id: token, userId: data._id, data: code });
+            sendMail(data.email, 'Reset your password', '<p>Hi,</p><p>Below is the code you need to reset your password.</p><br><h3><strong>' + code + '</strong></h3><br><br><p>Thankyou</p>');
         }
-        res.status(200).json({ message: messages.post.forgot['200'] });
+        res.status(200).json({ message: messages.post.forgot['200'], token: token });
     });
 }
 function _reset(req, res) {
-    if (!req.body || !req.body.email) {
+    if (!req.body || !req.body.password || !req.body.code || !req.body.token) {
         res.status(400).json({ message: messages.post.forgot['400'] });
         return;
     }
-    userModel.findOneAndUpdate({ email: req.body.email }, function (err, data) {
-        if (err) {
-            logger.error(err);
+    tokenModel.findById(req.body.token, (tokenErr, tokenData) => {
+        if (tokenErr) {
+            logger.error(tokenErr);
             res.status(500).json({ message: messages.post.forgot['500'] });
             return
         }
-        if (!data) {
+        if (!tokenData || (tokenData.data != req.body.code)) {
             res.status(400).json({ message: messages.post.forgot['400'] });
             return
         }
-        res.status(200).json({ message: messages.post.forgot['200'] });
+        var password = utils.encrypt(secret, req.body.password);
+        userModel.findByIdAndUpdate(tokenData.userId, { password: password, lastUpdated: new Date() }, (err, data) => {
+            if (err) {
+                logger.error(err);
+                res.status(500).json({ message: messages.post.forgot['500'] });
+                return
+            }
+            res.status(200).json({ message: messages.post.forgot['200'] });
+        });
+        tokenModel.deleteOne({ _id: req.body.token }).exec();
     });
 }
 
