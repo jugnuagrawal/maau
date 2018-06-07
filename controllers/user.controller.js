@@ -265,14 +265,23 @@ function _activate(req, res) {
         userModel.findByIdAndUpdate(tokenData.userId, { status: 1 }, (err, data) => {
             if (err) {
                 logger.error(err);
-                res.status(500).json({ message: messages.get.activate['500'] });
+                res.render('activate', {
+                    status:500,
+                    message: messages.get.activate['500']
+                });
                 return;
             }
             if (!data) {
-                res.status(401).json({ message: messages.get.activate['401'] });
+                res.render('activate', {
+                    status:401,
+                    message: messages.get.activate['401']
+                });
                 return;
             }
-            res.status(200).json({ message: messages.get.activate['200'] });
+            res.render('activate', {
+                status:200,
+                message: messages.get.activate['200']
+            });
         });
         tokenModel.deleteOne({ _id: req.params.token }).exec();
     });
