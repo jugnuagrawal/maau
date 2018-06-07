@@ -113,6 +113,9 @@ function _read(req, res) {
 
 function _update(req, res) {
     req.body.lastUpdated = new Data();
+    if(req.body.password){
+        req.body.password = utils.encrypt(secret, req.body.password);
+    }
     userModel.findOneAndUpdate({ id: req.params.id }, req.body, function (err, data) {
         if (err) {
             logger.error(err);
@@ -291,6 +294,28 @@ function _forgot(req, res) {
         res.status(200).json({ message: messages.post.forgot['200'] });
     });
 }
+function _reset(req, res) {
+    if (!req.body || !req.body.email) {
+        res.status(400).json({ message: messages.post.forgot['400'] });
+        return;
+    }
+    userModel.findOne({ email: req.body.email }, function (err, data) {
+        if (err) {
+            logger.error(err);
+            res.status(500).json({ message: messages.post.forgot['500'] });
+            return
+        }
+        if (!data) {
+            res.status(400).json({ message: messages.post.forgot['400'] });
+            return
+        }
+        var token = jwt.sign({ email: data.email, password: data.password }, secret, { expiresIn: '6h' });
+        if (config.enableMail) {
+            _sendMail(data.email, 'Reset your password', '');
+        }
+        res.status(200).json({ message: messages.post.forgot['200'] });
+    });
+}
 
 
 //Exporting CRUD controllers
@@ -304,5 +329,6 @@ module.exports = {
     register: _register,
     validate: _validate,
     activate: _activate,
-    forgot: _forgot
+    forgot: _forgot,
+    reset: _reset
 }
