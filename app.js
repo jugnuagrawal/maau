@@ -29,6 +29,9 @@ app.use(bodyParser.json());
 app.use(function (_req, _res, _next) {
     var ip = _req.headers['x-forwarded-for'] || _req.connection.remoteAddress;
     logger.info(_req.method, ip, _req.path, _req.params, _req.query, _req.body);
+    _res.set('Access-Control-Allow-Origin','*');
+    _res.set('Access-Control-Allow-Methods','*');
+    _res.set('Access-Control-Allow-Headers','content-type,authorization');
     _next();
 });
 
