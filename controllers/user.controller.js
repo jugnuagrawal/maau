@@ -39,14 +39,14 @@ function _sendMail(to, subject, content) {
 }
 
 function _create(req, res) {
-    req.body.password = jwt.sign(req.body.password, secret);
+    req.body.password = utils.encrypt(secret, req.body.password);
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
     req.body.deleted = false;
     userModel.create(req.body, function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(500).json({ message: messages.post.user['500']  });
+            res.status(500).json({ message: messages.post.user['500'] });
         } else {
             if (config.enableMail) {
                 _sendMail(req.body.email, 'Activate your account', '');
@@ -104,7 +104,7 @@ function _read(req, res) {
     query.exec(function (err, data) {
         if (err) {
             logger.error(err);
-            res.status(500).json({ message: messages.get.user['500']  });
+            res.status(500).json({ message: messages.get.user['500'] });
         } else {
             res.status(200).json(data);
         }
@@ -137,7 +137,7 @@ function _delete(req, res) {
         userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, function (err, data) {
             if (err) {
                 logger.error(err);
-                res.status(400).json({ message: messages.delete.user['500']  });
+                res.status(400).json({ message: messages.delete.user['500'] });
             } else {
                 res.status(200).json(data);
             }
@@ -184,26 +184,20 @@ function _login(req, res) {
             res.status(401).json({ message: messages.post.login['401'] });
             return;
         }
-        jwt.verify(data.password, secret, (err, decoded) => {
-            if (err) {
-                logger.error(err);
-                res.status(400).json({ message: messages.post.login['400'] });
-                return;
-            }
-            if (decoded != password) {
-                res.status(400).json({ message: messages.post.login['400'] });
-                return;
-            } else {
-                var temp = {
-                    firstName: data.firstName,
-                    lastName: data.lastName,
-                    contact: data.contact,
-                    email: data.email
-                };
-                temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
-                res.status(200).json(temp);
-            }
-        });
+        var decrypted = utils.decrypt(secret, data.password);
+        if (decrypted != password) {
+            res.status(400).json({ message: messages.post.login['400'] });
+            return;
+        } else {
+            var temp = {
+                firstName: data.firstName,
+                lastName: data.lastName,
+                contact: data.contact,
+                email: data.email
+            };
+            temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
+            res.status(200).json(temp);
+        }
     });
 }
 function _register(req, res) {
@@ -211,7 +205,7 @@ function _register(req, res) {
         res.status(400).json({ message: messages.post.register['400'] });
         return;
     }
-    req.body.password = jwt.sign(req.body.password, secret);
+    req.body.password = utils.encrypt(secret, req.body.password);
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
     req.body.status = 0;

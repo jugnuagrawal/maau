@@ -1,5 +1,5 @@
-var mongoose = require("mongoose");
-
+const mongoose = require("mongoose");
+const crypto = require('crypto');
 function createId(next, size) {
     var char = this.charAt(0).toUpperCase();
     for (var i = 1; i < this.length; i++) {
@@ -61,4 +61,21 @@ function getNextId(collectionName) {
     };
 }
 
+function encrypt(secret,text){
+  var cipher = crypto.createCipher('aes-256-ctr',secret)
+  var crypted = cipher.update(text,'utf8','hex')
+  crypted += cipher.final('hex');
+  return crypted;
+}
+ 
+function decrypt(secret,text){
+  var decipher = crypto.createDecipher('aes-256-ctr',secret)
+  var dec = decipher.update(text,'hex','utf8')
+  dec += decipher.final('utf8');
+  return dec;
+}
+
+
 module.exports.getNextId = getNextId;
+module.exports.encrypt = encrypt;
+module.exports.decrypt = decrypt;

@@ -9,7 +9,7 @@ const messages = require('./messages/common.messages');
 const routes = require('./routes/index');
 const logger = log4js.getLogger('Server');
 const app = express();
-const host = process.env.HOST || 'localhost';
+const host = process.env.HOST || '127.0.0.1';
 const port = process.env.PORT || config.port || 3000;
 const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/' + (config.database || 'maau');
 const secret = config.secret;
@@ -22,6 +22,7 @@ log4js.configure({
 });
 
 //body parser middleware
+app.use(bodyParser.urlencoded());
 app.use(bodyParser.json());
 
 //logging each request
