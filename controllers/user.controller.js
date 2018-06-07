@@ -52,7 +52,7 @@ function _create(req, res) {
             if (config.enableMail) {
                 var token = magicToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><br><p>Thankyou</p>');
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
             res.status(200).json(data);
         }
@@ -229,7 +229,7 @@ function _register(req, res) {
             if (config.enableMail) {
                 var token = magicToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><br><p>Thankyou</p>');
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
             res.status(200).json({ message: messages.post.register['200'] });
         }
@@ -308,7 +308,7 @@ function _forgot(req, res) {
             var token = magicToken.token();
             var code = utils.generateCode();
             tokenModel.create({ _id: token, userId: data._id, data: code });
-            sendMail(data.email, 'Reset your password', '<p>Hi,</p><p>Below is the code you need to reset your password.</p><br><h3><strong>' + code + '</strong></h3><br><br><p>Thankyou</p>');
+            sendMail(data.email, 'Reset your password', '<p>Hi,</p><p>Below is the code you need to reset your password.</p><h3><strong>' + code + '</strong></h3><p>Thankyou</p>');
         }
         res.status(200).json({ message: messages.post.forgot['200'], token: token });
     });
