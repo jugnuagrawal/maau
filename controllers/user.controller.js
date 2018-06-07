@@ -30,7 +30,7 @@ function sendMail(to, subject, content) {
         subject: subject, // Subject line
         html: content // html body
     };
-    transporter.sendMail(mailOptions, (error, info) => {
+    transporter.sendMail(mailOptions, (err, info) => {
         if (err) {
             logger.error(err);
             return;
