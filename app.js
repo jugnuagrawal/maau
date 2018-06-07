@@ -1,10 +1,11 @@
-const config = require('./config');
 const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const log4js = require('log4js');
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
+const utils = require('./utils/utils');
+const config = require('./config');
 const messages = require('./messages/common.messages');
 const routes = require('./routes/index');
 const logger = log4js.getLogger('Server');
@@ -32,7 +33,11 @@ app.use(function (_req, _res, _next) {
     _res.set('Access-Control-Allow-Origin','*');
     _res.set('Access-Control-Allow-Methods','*');
     _res.set('Access-Control-Allow-Headers','content-type,authorization');
-    _next();
+    if(_req.method == 'OPTIONS'){
+        _res.status(204).end();
+    }else{
+        _next();
+    }
 });
 
 //checking mongodb is available
@@ -65,7 +70,7 @@ app.use(function (_req, _res, _next) {
                         _res.status(404).json({ message: messages['401'] });
                         return;
                     }
-                    next();
+                    _next();
                 });
             });
         } else {
@@ -102,7 +107,7 @@ app.listen(port, host, function () {
     logger.info('Server is listening at ', 'http://' + host + ':' + port + '/');
     logger.info('API documentation at ', 'http://' + host + ':' + port + '/apidoc');
     let defaultUser = require('./users.json');
-    defaultUser.password = jwt.sign(defaultUser.password, secret);
+    defaultUser.password = utils.encrypt(secret,defaultUser.password);
     defaultUser.createdAt = new Date();
     defaultUser.lastUpdated = new Date();
     defaultUser.deleted = false;
