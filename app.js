@@ -66,7 +66,7 @@ app.use(function (req, res, next) {
                     return;
                 }
                 model.findOne({ email: decoded.email }, (_err, _data) => {
-                    if (_err || !_data) {
+                    if (_err || !_data || _data.type!=0) {
                         res.status(404).json({ message: messages['401'] });
                         return;
                     }

@@ -215,7 +215,7 @@ function _register(req, res) {
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
     req.body.status = 0;
-    req.body.type = 0;
+    req.body.type = 1;
     req.body.deleted = false;
     userModel.create(req.body, (err, data) => {
         if (err) {
