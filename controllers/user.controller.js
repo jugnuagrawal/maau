@@ -1,19 +1,26 @@
-const magicToken = require('magic-token');
-const jwt = require('jsonwebtoken');
+const uniqueToken = require('unique-token');
 const mongoose = require('mongoose');
 const nodemailer = require('nodemailer');
 const log4js = require('log4js');
 const config = require('../config');
 const utils = require('../utils/utils');
 const userSchema = new mongoose.Schema(require('../schemas/user.schema'));
-const tokenSchema = new mongoose.Schema({ _id: String, userId: String, data: String });
+const tokenSchema = new mongoose.Schema({
+    _id: String,
+    userId: String,
+    data: Object,
+    expiresIn: {
+        type: Date,
+        default: Date.now() + 3600000 // 1hr
+    }
+});
 const messages = require('../messages/user.messages');
 const logger = log4js.getLogger('Controller');
 userSchema.add({ _id: { type: "String" } });
 userSchema.pre('save', utils.getNextId('user'));
 
-const userModel = mongoose.model('user', userSchema);
-const tokenModel = mongoose.model('token', tokenSchema);
+const userModel = mongoose.model('users', userSchema);
+const tokenModel = mongoose.model('tokens', tokenSchema);
 
 const secret = config.secret;
 
@@ -50,7 +57,7 @@ function _create(req, res) {
             res.status(500).json({ message: messages.post.user['500'] });
         } else {
             if (config.enableMail) {
-                var token = magicToken.token();
+                var token = uniqueToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
                 sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
@@ -119,7 +126,7 @@ function _update(req, res) {
     if (req.body.password) {
         req.body.password = utils.encrypt(secret, req.body.password);
     }
-    userModel.findOneAndUpdate({ id: req.params.id }, req.body, (err, data) => {
+    userModel.update({ id: req.params.id }, req.body, (err, data) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.put.user['500'] });
@@ -131,7 +138,7 @@ function _update(req, res) {
 
 function _delete(req, res) {
     if (config.permanentDelete == true) {
-        userModel.findByIdAndRemove(req.params.id, (err, data) => {
+        userModel.remove({ id: req.params.id }, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(500).json({ message: messages.delete.user['500'] });
@@ -140,7 +147,7 @@ function _delete(req, res) {
             }
         });
     } else {
-        userModel.findOneAndUpdate({ id: req.params.id }, { deleted: true }, (err, data) => {
+        userModel.update({ id: req.params.id }, { deleted: true }, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(400).json({ message: messages.delete.user['500'] });
@@ -159,12 +166,13 @@ function _count(req, res) {
     if (config.permanentDelete == false) {
         filter.deleted = false;
     }
-    userModel.count(filter, (err, count) => {
+    userModel.where(filter);
+    userModel.countDocuments((err, count) => {
         if (err) {
             logger.error(err);
             res.status(500).json({ message: messages.get.count['500'] });
         } else {
-            res.status(200).end(count);
+            res.status(200).json(count);
         }
     });
 }
@@ -201,8 +209,12 @@ function _login(req, res) {
                 contact: data.contact,
                 email: data.email
             };
-            temp.token = jwt.sign(temp, secret, { expiresIn: '6h' });
-            res.status(200).json(temp);
+            temp.token = uniqueToken.token();
+            tokenModel.create({ _id: temp, token, userId: data._id }).then(d => {
+                res.status(200).json(temp);
+            }).catch(e => {
+                res.status(500).json({ message: 'Unable to login' });
+            });
         }
     });
 }
@@ -227,7 +239,7 @@ function _register(req, res) {
             }
         } else {
             if (config.enableMail) {
-                var token = magicToken.token();
+                var token = uniqueToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
                 sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
@@ -235,14 +247,20 @@ function _register(req, res) {
         }
     });
 }
-
+function _logout(req, res) {
+    tokenModel.findByIdAndRemove(req.headers.authorization).then(d => {
+        res.status(200).json({ message: messages.get.logout['200'] });
+    }).catch(e => {
+        res.status(500).json({ message: messages.get.logout['500'] });
+    });
+}
 function _validate(req, res) {
-    jwt.verify(req.headers.authorization, secret, (err, decoded) => {
-        if (err || !decoded) {
+    tokenModel.findById(req.headers.authorization).then(d => {
+        if (!d) {
             res.status(401).json({ message: messages.get.validate['401'] });
             return;
         }
-        userModel.findOne({ email: decoded.email }, (err, data) => {
+        userModel.findById(d.userId, (err, data) => {
             if (err) {
                 logger.error(err);
                 res.status(500).json({ message: messages.get.validate['500'] });
@@ -254,13 +272,15 @@ function _validate(req, res) {
             }
             res.status(200).json({ message: messages.get.validate['200'] });
         });
+    }).catch(e => {
+        res.status(500).json({ message: messages.get.validate['500'] });
     });
 }
 function _activate(req, res) {
     tokenModel.findById(req.params.token, (tokenErr, tokenData) => {
         if (tokenErr || !tokenData) {
             res.render('activate', {
-                status:401,
+                status: 401,
                 message: messages.get.activate['401']
             });
             return;
@@ -269,20 +289,20 @@ function _activate(req, res) {
             if (err) {
                 logger.error(err);
                 res.render('activate', {
-                    status:500,
+                    status: 500,
                     message: messages.get.activate['500']
                 });
                 return;
             }
             if (!data) {
                 res.render('activate', {
-                    status:401,
+                    status: 401,
                     message: messages.get.activate['401']
                 });
                 return;
             }
             res.render('activate', {
-                status:200,
+                status: 200,
                 message: messages.get.activate['200']
             });
         });
@@ -305,8 +325,8 @@ function _forgot(req, res) {
             return
         }
         if (config.enableMail) {
-            var token = magicToken.token();
-            var code = utils.generateCode();
+            var token = uniqueToken.token();
+            var code = uniqueToken.random().toUpperCase();
             tokenModel.create({ _id: token, userId: data._id, data: code });
             sendMail(data.email, 'Reset your password', '<p>Hi,</p><p>Below is the code you need to reset your password.</p><h3><strong>' + code + '</strong></h3><p>Thankyou</p>');
         }
@@ -350,6 +370,7 @@ module.exports = {
     delete: _delete,
     count: _count,
     login: _login,
+    logout: _logout,
     register: _register,
     validate: _validate,
     activate: _activate,

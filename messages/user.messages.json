@@ -1,15 +1,20 @@
 {
     "get": {
-        "user":{
+        "user": {
             "500": "Unable to get user"
         },
-        "count":{
+        "count": {
             "500": "Unable to fetch count"
         },
         "validate": {
             "200": "Valid token",
             "401": "Invalid token",
             "500": "Unable to validate, please try again later"
+        },
+        "logout": {
+            "200": "Logged out successfully",
+            "401": "Invalid token",
+            "500": "Unable to logout, please try again later"
         },
         "activate": {
             "200": "Valid token",
@@ -18,7 +23,7 @@
         }
     },
     "post": {
-        "user":{
+        "user": {
             "500": "Unable to create user"
         },
         "login": {
@@ -39,12 +44,12 @@
         }
     },
     "put": {
-        "user":{
+        "user": {
             "500": "Unable to update user"
         }
     },
     "delete": {
-        "user":{
+        "user": {
             "500": "Unable to delete user"
         }
     }

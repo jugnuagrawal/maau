@@ -11,6 +11,7 @@
     router.get('/validate',controller.validate);
     router.get('/activate/:token',controller.activate);
     router.post('/login',controller.login);
+    router.post('/logout',controller.logout);
     router.post('/register',controller.register);
     router.post('/forgot',controller.forgot);
     module.exports = router;

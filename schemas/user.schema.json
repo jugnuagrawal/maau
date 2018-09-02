@@ -1,9 +1,7 @@
 {
-    "firstName": {
-        "type": "String"
-    },
-    "lastName": {
-        "type": "String"
+    "name": {
+        "type": "String",
+        "required": true
     },
     "email": {
         "type": "String",
@@ -17,10 +15,31 @@
         "type": "String"
     },
     "status": {
-        "type": "Number"
+        "type": "Number",
+        "enum": [
+            0,
+            1,
+            2,
+            3
+        ]
     },
-    "type": {
-        "type": "Number"
+    "level": {
+        "type": "Number",
+        "enum": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+        ]
+    },
+    "loginType": {
+        "type": "Number",
+        "enum": [
+            0,
+            1
+        ]
     },
     "createdAt": {
         "type": "Date"

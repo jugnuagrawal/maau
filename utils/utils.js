@@ -75,17 +75,28 @@ function decrypt(secret, text) {
     return dec;
 }
 
-function generateCode(length=5) {
-    var chars = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'];
+function generateCode(length = 5) {
+    var chars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
     var str = '';
-    for(var i =0;i<length;i++){
-        var index = Math.floor(Math.random()*12345)%chars.length;
-        str+=chars[index];
+    for (var i = 0; i < length; i++) {
+        var index = Math.floor(Math.random() * 12345) % chars.length;
+        str += chars[index];
     }
     return str;
 }
 
-module.exports.getNextId = getNextId;
-module.exports.encrypt = encrypt;
-module.exports.decrypt = decrypt;
-module.exports.generateCode = generateCode;
+function isDefaultPath(path) {
+    const defaultPath = ['activate', 'apidoc', 'login', 'register', 'forgot', 'validate'];
+    if (path && path.trim()) {
+        return path.split('/').find(e => defaultPath.indexOf(e) > -1);
+    }
+    return false;
+}
+
+module.exports = {
+    getNextId: getNextId,
+    encrypt: encrypt,
+    decrypt: decrypt,
+    generateCode: generateCode,
+    isDefaultPath: isDefaultPath
+};
