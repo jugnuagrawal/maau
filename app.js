@@ -13,7 +13,7 @@ const host = process.env.HOST || '127.0.0.1';
 const port = process.env.PORT || config.port || 3000;
 const mongo_url = process.env.MONGO_URL || 'mongodb://localhost:27017/' + (config.database || 'maau');
 const secret = config.secret;
-const userModel = mongoose.model('user');
+const userModel = mongoose.model('users');
 const tokenModel = mongoose.model('tokens');
 //log4js configuration
 log4js.configure({

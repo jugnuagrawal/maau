@@ -1,9 +1,9 @@
 {
-    "firstName": "John",
-    "lastName": "Doe",
+    "name": "John Doe",
     "email": "admin",
     "password": "admin",
     "contact": "",
     "status": 2,
-    "type": 0
+    "level": 0,
+    "loginType": 0
 }
