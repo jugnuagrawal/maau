@@ -62,14 +62,14 @@ function getNextId(collectionName) {
 }
 
 function encrypt(secret, text) {
-    var cipher = crypto.createCipher('aes-256-ctr', secret)
+    var cipher = crypto.createCipher('aes-256-cbc-hmac-sha256', secret)
     var crypted = cipher.update(text, 'utf8', 'hex')
     crypted += cipher.final('hex');
     return crypted;
 }
 
 function decrypt(secret, text) {
-    var decipher = crypto.createDecipher('aes-256-ctr', secret)
+    var decipher = crypto.createDecipher('aes-256-cbc-hmac-sha256', secret)
     var dec = decipher.update(text, 'hex', 'utf8')
     dec += decipher.final('utf8');
     return dec;
