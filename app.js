@@ -39,6 +39,26 @@ app.use((req, res, next) => {
     }
 });
 
+mongoose.connect(mongo_url, (err) => {
+    if (err) {
+        logger.error(err);
+        throw err;
+    } else {
+        let defaultUser = require('./users.json');
+        defaultUser.password = utils.encrypt(secret, defaultUser.password);
+        defaultUser.createdAt = new Date();
+        defaultUser.lastUpdated = new Date();
+        defaultUser.deleted = false;
+        userModel.create(defaultUser).then(data => {
+            logger.info(data);
+        }).catch(err => {
+            if (err.code !== 11000) {
+                logger.error(err.code);
+            }
+        });
+    }
+});
+
 //checking mongodb is available
 app.use((req, res, next) => {
     if (mongoose.connections.length == 0 || mongoose.connections[0].readyState != 1) {
@@ -107,14 +127,4 @@ app.use('*', (req, res) => {
 app.listen(port, host, () => {
     logger.info('Server is listening at ', 'http://' + host + ':' + port + '/');
     logger.info('API documentation at ', 'http://' + host + ':' + port + '/apidoc');
-    let defaultUser = require('./users.json');
-    defaultUser.password = utils.encrypt(secret, defaultUser.password);
-    defaultUser.createdAt = new Date();
-    defaultUser.lastUpdated = new Date();
-    defaultUser.deleted = false;
-    userModel.create(defaultUser).then(data => {
-        logger.info(data);
-    }).catch(err => {
-        logger.error(err);
-    });
 });

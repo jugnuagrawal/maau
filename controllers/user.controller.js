@@ -182,13 +182,15 @@ function _login(req, res) {
             return;
         } else {
             var temp = {
-                firstName: data.firstName,
-                lastName: data.lastName,
+                name: data.name,
                 contact: data.contact,
-                email: data.email
+                email: data.email,
+                status: data.status,
+                level: data.level,
+                loginType: data.loginType
             };
             temp.token = uniqueToken.token();
-            tokenModel.create({ _id: temp, token, userId: data._id }).then(d => {
+            tokenModel.create({ _id: temp.token, token: temp, userId: data._id }).then(d => {
                 res.status(200).json(temp);
             }).catch(e => {
                 res.status(500).json({ message: 'Unable to login' });
