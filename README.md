@@ -16,8 +16,8 @@ cd maau
 npm install
 npm start
 
-#[2018-03-18T21:27:55.596] [INFO] Server - Server is listening at  http://localhost:3000/
-#[2018-03-18T21:27:55.600] [INFO] Server - API documentation at  http://localhost:3000/apidoc
+#[2018-03-18T21:27:55.596] [INFO] Server - Server is listening at  http://localhost:4000/
+#[2018-03-18T21:27:55.600] [INFO] Server - API documentation at  http://localhost:4000/apidoc
 ```
 
 
@@ -27,7 +27,7 @@ npm start
 ```javascript
 {
     "database":"maau",
-    "port":"3000",
+    "port":"4000",
     "secret": "1234567890",
     "permanentDelete": true,
     "enableMail":false,

@@ -46,8 +46,5 @@
     },
     "lastUpdated": {
         "type": "Date"
-    },
-    "deleted": {
-        "type": "Boolean"
     }
 }

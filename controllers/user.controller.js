@@ -50,7 +50,6 @@ function _create(req, res) {
     req.body.password = utils.encrypt(secret, req.body.password);
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
-    req.body.deleted = false;
     userModel.create(req.body, (err, data) => {
         if (err) {
             logger.error(err);
@@ -59,7 +58,7 @@ function _create(req, res) {
             if (config.enableMail) {
                 var token = uniqueToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:4000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
             res.status(200).json(data);
         }
@@ -95,9 +94,6 @@ function _read(req, res) {
         } catch (e) {
             logger.error(e);
         }
-    }
-    if (config.permanentDelete == false) {
-        filter.deleted = false;
     }
     if (req.params.id) {
         query = userModel.findById(req.params.id);
@@ -137,34 +133,20 @@ function _update(req, res) {
 }
 
 function _delete(req, res) {
-    if (config.permanentDelete == true) {
-        userModel.remove({ id: req.params.id }, (err, data) => {
-            if (err) {
-                logger.error(err);
-                res.status(500).json({ message: messages.delete.user['500'] });
-            } else {
-                res.status(200).json(data);
-            }
-        });
-    } else {
-        userModel.update({ id: req.params.id }, { deleted: true }, (err, data) => {
-            if (err) {
-                logger.error(err);
-                res.status(400).json({ message: messages.delete.user['500'] });
-            } else {
-                res.status(200).json(data);
-            }
-        });
-    }
+    userModel.remove({ id: req.params.id }, (err, data) => {
+        if (err) {
+            logger.error(err);
+            res.status(500).json({ message: messages.delete.user['500'] });
+        } else {
+            res.status(200).json(data);
+        }
+    });
 }
 
 function _count(req, res) {
     var filter = {};
     if (req.query.filter) {
         filter = req.query.filter;
-    }
-    if (config.permanentDelete == false) {
-        filter.deleted = false;
     }
     userModel.where(filter);
     userModel.countDocuments((err, count) => {
@@ -192,10 +174,6 @@ function _login(req, res) {
         }
         if (!data) {
             res.status(400).json({ message: messages.post.login['400'] });
-            return;
-        }
-        if (data.deleted) {
-            res.status(401).json({ message: messages.post.login['401'] });
             return;
         }
         var decrypted = utils.decrypt(secret, data.password);
@@ -227,8 +205,8 @@ function _register(req, res) {
     req.body.createdAt = new Date();
     req.body.lastUpdated = new Date();
     req.body.status = 0;
-    req.body.type = 1;
-    req.body.deleted = false;
+    req.body.loginType = 0;
+    req.body.level = 1;
     userModel.create(req.body, (err, data) => {
         if (err) {
             if (err.code == 11000) {
@@ -241,7 +219,7 @@ function _register(req, res) {
             if (config.enableMail) {
                 var token = uniqueToken.token();
                 tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:3000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
+                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:4000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
             }
             res.status(200).json({ message: messages.post.register['200'] });
         }
