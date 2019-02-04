@@ -110,11 +110,15 @@ for (var route of routes) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'apidoc'));
 app.get('/apidoc', (req, res) => {
-    res.render('index', {
-        host: host,
-        port: port,
-        schema: require('./schemas/user.schema')
-    });
+    if (req.headers["content-type"] === 'application/json') {
+        res.sendFile(path.join(__dirname, 'apis.json'));
+    } else {
+        res.render('index', {
+            host: host,
+            port: port,
+            schema: require('./schemas/user.schema')
+        });
+    }
 });
 
 //Invalid routes handle

@@ -1,0 +1,343 @@
+{
+    "host": "http://localhost",
+    "port": "4000",
+    "paths": {
+        "/user/count": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "filter",
+                        "type": "string",
+                        "description": "Returns the count based on the filter"
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Success",
+                        "body": "number"
+                    },
+                    "401": {
+                        "description": "Unauthorised",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "filter",
+                        "type": "string",
+                        "description": "Returns the records based on the filter"
+                    },
+                    {
+                        "in": "query",
+                        "name": "select",
+                        "type": "string",
+                        "description": "Returns the records with the selected fields"
+                    },
+                    {
+                        "in": "query",
+                        "name": "count",
+                        "type": "number",
+                        "description": "Returns the number of records (Default: 10)"
+                    },
+                    {
+                        "in": "query",
+                        "name": "page",
+                        "type": "number",
+                        "description": "Returns the set of records (one page has 'count' no of records)"
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Records found",
+                        "body": "Array of user json"
+                    },
+                    "401": {
+                        "description": "Unauthorised",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "type": "object",
+                        "description": "user json",
+                        "required": true
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Record created successfully",
+                        "body": {
+                            "id": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Parameters",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Token invalid",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{id}": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "type": "string",
+                        "description": "ID of the record to fetch",
+                        "required": true
+                    },
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "query",
+                        "name": "select",
+                        "type": "string",
+                        "description": "Returns the records with the selected fields"
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Record found",
+                        "body": "user json"
+                    },
+                    "401": {
+                        "description": "Unauthorised",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Record not found",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "type": "string",
+                        "description": "ID of the record to update",
+                        "required": true
+                    },
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "type": "object",
+                        "description": "user json",
+                        "required": true
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Record updated successfully",
+                        "body": {
+                            "id": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Parameters",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorised",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    },
+                    {
+                        "in": "path",
+                        "name": "id",
+                        "type": "string",
+                        "description": "ID of the record to delete",
+                        "required": true
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Record deleted successfully",
+                        "body": {
+                            "id": "string"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorised",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/validate": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "authorization",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Token valid",
+                        "body": "true"
+                    },
+                    "401": {
+                        "description": "Token invalid",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/activate/{token}": {
+            "get": {
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "token",
+                        "type": "string",
+                        "description": "Authorization token",
+                        "required": true
+                    }
+                ],
+                "response": {
+                    "200": {
+                        "description": "Verified",
+                        "body": "user json"
+                    },
+                    "401": {
+                        "description": "Token invalid",
+                        "body": {
+                            "message": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "body": {
+                            "message": "string"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
