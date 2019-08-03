@@ -356,4 +356,4 @@ module.exports = {
     activate: _activate,
     forgot: _forgot,
     reset: _reset
-}
+};
