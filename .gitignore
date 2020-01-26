@@ -1,5 +1,5 @@
 .vscode
 node_modules
 logs
-package-lock.json
 test.js
+.env

@@ -1,75 +1,37 @@
-const uniqueToken = require('unique-token');
+const router = require('express').Router();
 const mongoose = require('mongoose');
-const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 const log4js = require('log4js');
-const config = require('../config');
-const utils = require('../utils/utils');
-const userSchema = new mongoose.Schema(require('../schemas/user.schema'));
-const tokenSchema = new mongoose.Schema({
-    _id: String,
-    userId: String,
-    data: Object,
-    expiresIn: {
-        type: Date,
-        default: Date.now() + 3600000 // 1hr
+
+const logger = log4js.getLogger('user.controller');
+const userModel = mongoose.model('users');
+
+router.post('/', (req, res) => {
+    async function execute() {
+        const payload = req.body;
+        let doc = await userModel.findOne({ username: payload.username });
+        if (doc) {
+            return res.status(400).json({
+                message: 'User Already Exist'
+            });
+        }
+        payload.password = bcrypt.hashSync(payload.password, 10);
+        doc = new userModel(payload);
+        const status = await doc.save();
+        res.status(200).json(status);
     }
-});
-const messages = require('../messages/user.messages');
-const logger = log4js.getLogger('Controller');
-userSchema.add({ _id: { type: "String" } });
-userSchema.pre('save', utils.getNextId('user'));
+    execute().catch(err => {
+        logger.error(err);
+        res.status(500).json({ message: err.message });
+    });
 
-const userModel = mongoose.model('users', userSchema);
-const tokenModel = mongoose.model('tokens', tokenSchema);
-
-const secret = config.secret;
-
-log4js.configure({
-    appenders: { 'out': { type: 'stdout' }, controller: { type: 'file', filename: 'logs/controller.log', maxLogSize: 52428800 } },
-    categories: { default: { appenders: ['out', 'controller'], level: 'info' } }
 });
 
-function sendMail(to, subject, content) {
-    let transporter = nodemailer.createTransport(config.smtp);
-    let mailOptions = {
-        from: config.mail.from, // sender address
-        to: to, // list of receivers
-        subject: subject, // Subject line
-        html: content // html body
-    };
-    transporter.sendMail(mailOptions, (err, info) => {
-        if (err) {
-            logger.error(err);
-            return;
-        }
-        logger.info('Email sent: ', info.messageId);
-    });
-}
-
-function _create(req, res) {
-    req.body.password = utils.encrypt(secret, req.body.password);
-    req.body.createdAt = new Date();
-    req.body.lastUpdated = new Date();
-    userModel.create(req.body, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.post.user['500'] });
-        } else {
-            if (config.enableMail) {
-                var token = uniqueToken.token();
-                tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:4000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
-            }
-            res.status(200).json(data);
-        }
-    });
-}
-
-function _read(req, res) {
-    var query = null;
-    var skip = 0;
-    var count = 10;
-    var filter = {};
+router.get('/', (req, res) => {
+    let query = null;
+    let skip = 0;
+    let count = 10;
+    let filter = {};
     if (req.query.count && req.query.count > 0) {
         count = req.query.count;
     }
@@ -95,265 +57,82 @@ function _read(req, res) {
             logger.error(e);
         }
     }
-    if (req.params.id) {
-        query = userModel.findById(req.params.id);
+    if (req.query.countOnly) {
+        query = userModel.count(filter);
     } else {
         query = userModel.find(filter);
         if (count > 0) {
             query.skip(skip);
             query.limit(count);
         }
-    }
-    if (req.query.select) {
-        query.select(req.query.select.split(',').join(' '));
-    }
-    query.exec((err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.get.user['500'] });
-        } else {
-            res.status(200).json(data);
+        if (req.query.select) {
+            query.select(req.query.select.split(',').join(' '));
         }
+    }
+    query.exec().then(data => {
+        res.status(200).json(data);
+    }).catch(err => {
+        logger.error(err);
+        res.status(500).json({ message: err.message });
     });
-}
+});
 
-function _update(req, res) {
-    req.body.lastUpdated = new Data();
-    if (req.body.password) {
-        req.body.password = utils.encrypt(secret, req.body.password);
-    }
-    userModel.update({ id: req.params.id }, req.body, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.put.user['500'] });
+router.put('/:id', (req, res) => {
+    async function execute() {
+        const payload = req.body;
+        const doc = await userModel.findById(req.params.id);
+        if (doc) {
+            if (payload.password) {
+                doc.password = bcrypt.hashSync(payload.password, 10);
+                delete payload.password;
+            }
+            delete payload._id;
+            Object.keys(payload).forEach(key => {
+                if (payload[key] && payload[key].trim()) {
+                    doc[key] = payload[key];
+                }
+            });
+            const status = await doc.save();
+            res.status(200).json(status);
         } else {
-            res.status(200).json(data);
-        }
-    });
-}
-
-function _delete(req, res) {
-    userModel.remove({ id: req.params.id }, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.delete.user['500'] });
-        } else {
-            res.status(200).json(data);
-        }
-    });
-}
-
-function _count(req, res) {
-    var filter = {};
-    if (req.query.filter) {
-        filter = req.query.filter;
-    }
-    userModel.where(filter);
-    userModel.countDocuments((err, count) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.get.count['500'] });
-        } else {
-            res.status(200).json(count);
-        }
-    });
-}
-
-function _login(req, res) {
-    var email = req.body.email;
-    var password = req.body.password;
-    if (!email || !email.trim() || !password || !password.trim()) {
-        res.status(400).json({ message: messages.post.login['400'] });
-        return;
-    }
-    userModel.findOne({ email: email }, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.post.login['500'] });
-            return;
-        }
-        if (!data) {
-            res.status(400).json({ message: messages.post.login['400'] });
-            return;
-        }
-        var decrypted = utils.decrypt(secret, data.password);
-        if (decrypted != password) {
-            res.status(400).json({ message: messages.post.login['400'] });
-            return;
-        } else {
-            var temp = {
-                name: data.name,
-                contact: data.contact,
-                email: data.email,
-                status: data.status,
-                level: data.level,
-                loginType: data.loginType
-            };
-            temp.token = uniqueToken.token();
-            tokenModel.create({ _id: temp.token, token: temp, userId: data._id }).then(d => {
-                res.status(200).json(temp);
-            }).catch(e => {
-                res.status(500).json({ message: 'Unable to login' });
+            res.status(404).json({
+                message: 'User Not Found'
             });
         }
-    });
-}
-function _register(req, res) {
-    if (!req.body.email || !req.body.email.trim() || !req.body.password || !req.body.password.trim()) {
-        res.status(400).json({ message: messages.post.register['400'] });
-        return;
     }
-    req.body.password = utils.encrypt(secret, req.body.password);
-    req.body.createdAt = new Date();
-    req.body.lastUpdated = new Date();
-    req.body.status = 0;
-    req.body.loginType = 0;
-    req.body.level = 1;
-    userModel.create(req.body, (err, data) => {
-        if (err) {
-            if (err.code == 11000) {
-                res.status(401).json({ message: messages.post.register['401'] });
-            } else {
-                logger.error(err);
-                res.status(500).json({ message: messages.post.register['500'] });
-            }
+    execute().catch(err => {
+        logger.error(err);
+        res.status(500).json({ message: err.message });
+    });
+});
+
+router.delete('/:id', (req, res) => {
+    async function execute() {
+        const doc = await userModel.findById(req.params.id);
+        if (doc) {
+            doc.status = 'DELETED';
+            const status = await doc.save();
+            res.status(200).json(status);
         } else {
-            if (config.enableMail) {
-                var token = uniqueToken.token();
-                tokenModel.create({ _id: token, userId: data._id });
-                sendMail(req.body.email, 'Activate your Account', '<h1>Welcome to Muneem</h1><br><p>Hi,</p><p>Please click the below link to active your account</p><br><a href="http://localhost:4000/activate/' + token + '">Activate Account</a><br><p>Thankyou</p>');
-            }
-            res.status(200).json({ message: messages.post.register['200'] });
-        }
-    });
-}
-function _logout(req, res) {
-    tokenModel.findByIdAndRemove(req.headers.authorization).then(d => {
-        res.status(200).json({ message: messages.get.logout['200'] });
-    }).catch(e => {
-        res.status(500).json({ message: messages.get.logout['500'] });
-    });
-}
-function _validate(req, res) {
-    tokenModel.findById(req.headers.authorization).then(d => {
-        if (!d) {
-            res.status(401).json({ message: messages.get.validate['401'] });
-            return;
-        }
-        userModel.findById(d.userId, (err, data) => {
-            if (err) {
-                logger.error(err);
-                res.status(500).json({ message: messages.get.validate['500'] });
-                return;
-            }
-            if (!data) {
-                res.status(401).json({ message: messages.get.validate['401'] });
-                return;
-            }
-            res.status(200).json({ message: messages.get.validate['200'] });
-        });
-    }).catch(e => {
-        res.status(500).json({ message: messages.get.validate['500'] });
-    });
-}
-function _activate(req, res) {
-    tokenModel.findById(req.params.token, (tokenErr, tokenData) => {
-        if (tokenErr || !tokenData) {
-            res.render('activate', {
-                status: 401,
-                message: messages.get.activate['401']
+            res.status(404).json({
+                message: 'User Not Found'
             });
-            return;
         }
-        userModel.findByIdAndUpdate(tokenData.userId, { status: 1 }, (err, data) => {
-            if (err) {
-                logger.error(err);
-                res.render('activate', {
-                    status: 500,
-                    message: messages.get.activate['500']
-                });
-                return;
-            }
-            if (!data) {
-                res.render('activate', {
-                    status: 401,
-                    message: messages.get.activate['401']
-                });
-                return;
-            }
-            res.render('activate', {
-                status: 200,
-                message: messages.get.activate['200']
-            });
-        });
-        tokenModel.deleteOne({ _id: req.params.token }).exec();
-    });
-}
-function _forgot(req, res) {
-    if (!req.body || !req.body.email) {
-        res.status(400).json({ message: messages.post.forgot['400'] });
-        return;
     }
-    userModel.findOne({ email: req.body.email }, (err, data) => {
-        if (err) {
-            logger.error(err);
-            res.status(500).json({ message: messages.post.forgot['500'] });
-            return
-        }
-        if (!data) {
-            res.status(400).json({ message: messages.post.forgot['400'] });
-            return
-        }
-        if (config.enableMail) {
-            var token = uniqueToken.token();
-            var code = uniqueToken.random().toUpperCase();
-            tokenModel.create({ _id: token, userId: data._id, data: code });
-            sendMail(data.email, 'Reset your password', '<p>Hi,</p><p>Below is the code you need to reset your password.</p><h3><strong>' + code + '</strong></h3><p>Thankyou</p>');
-        }
-        res.status(200).json({ message: messages.post.forgot['200'], token: token });
+    execute().catch(err => {
+        logger.error(err);
+        res.status(500).json({ message: err.message });
     });
-}
-function _reset(req, res) {
-    if (!req.body || !req.body.password || !req.body.code || !req.body.token) {
-        res.status(400).json({ message: messages.post.forgot['400'] });
-        return;
-    }
-    tokenModel.findById(req.body.token, (tokenErr, tokenData) => {
-        if (tokenErr) {
-            logger.error(tokenErr);
-            res.status(500).json({ message: messages.post.forgot['500'] });
-            return
-        }
-        if (!tokenData || (tokenData.data != req.body.code)) {
-            res.status(400).json({ message: messages.post.forgot['400'] });
-            return
-        }
-        var password = utils.encrypt(secret, req.body.password);
-        userModel.findByIdAndUpdate(tokenData.userId, { password: password, lastUpdated: new Date() }, (err, data) => {
-            if (err) {
-                logger.error(err);
-                res.status(500).json({ message: messages.post.forgot['500'] });
-                return
-            }
-            res.status(200).json({ message: messages.post.forgot['200'] });
-        });
-        tokenModel.deleteOne({ _id: req.body.token }).exec();
+});
+
+router.get('/:id', (req, res) => {
+    userModel.findById(req.params.id).then(doc => {
+        res.status(200).json(doc);
+    }).catch(err => {
+        logger.error(err);
+        res.status(500).json({ message: err.message });
     });
-}
+});
 
 
-//Exporting CRUD controllers
-module.exports = {
-    create: _create,
-    read: _read,
-    update: _update,
-    delete: _delete,
-    count: _count,
-    login: _login,
-    logout: _logout,
-    register: _register,
-    validate: _validate,
-    activate: _activate,
-    forgot: _forgot,
-    reset: _reset
-};
+module.exports = router;
